@@ -1,12 +1,16 @@
 services:
   backend:
     build: ./backend
+    container_name: flask_app
     ports:
       - "5001:5001"
     volumes:
       - ./backend:/app
+      # You may also want to add this volume to include any additional configuration files
+      - ./backend/requirements.txt:/app/requirements.txt
     environment:
       FLASK_ENV: development
+      FLASK_RUN_RELOAD: 'true'  # Enable Flask's auto-reloading
 
   frontend:
     build: ./frontend
@@ -16,4 +20,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - NODE_ENV=development
+      NODE_ENV: development
+
+volumes:
+  db_data:

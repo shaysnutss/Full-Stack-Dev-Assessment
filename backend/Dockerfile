@@ -10,11 +10,13 @@ COPY . /app
 # Install the dependencies in requirements.txt into the container
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Enable public access for port 5000 
+# Enable public access for port 5001 
 EXPOSE 5001
 
 # Define environment variable
 ENV FLASK_APP=app.py
+ENV FLASK_ENV=development 
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+# Run flask run when the container launches
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5001"]
+

@@ -18,21 +18,17 @@ import {
 
 function EditToolbar(props) {
   const { setRows, setRowModesModel } = props;
+  
 
-  const handleClick = async () => {
-    const randomId = () => '_' + Math.random().toString(36).substr(2, 9);
-    const newRow = { id: randomId(), name: '', priority: '', employeeName: '', isNew: true };
-
-    try {
-        const response = await axios.post('/api/rows', newRow);
-        setRows((oldRows) => [...(oldRows || []), response.data]);
-        setRowModesModel((oldModel) => ({
-                ...(oldModel || {}),
-                [newRow.id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
-            }));
-    } catch (error) {
-      console.error('Error adding row:', error);
-    }
+  const handleClick = () => {
+    const newId = Math.floor(Math.random() * 10000) +  Math.floor(Date.now() / 1000);
+    const newRow = { id: newId, name: '', description: '', priority: 'Low', daysRemaining: '', isNew: true };
+    
+    setRows((oldRows) => [...oldRows, newRow]);
+     setRowModesModel((oldModel) => ({
+       ...oldModel,
+       [newRow.id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
+     }));
   };
 
   return (
@@ -45,8 +41,12 @@ function EditToolbar(props) {
 }
 
 export default function FullFeaturedCrudGrid() {
-  const [rows, setRows] = useState([]);
-  const [rowModesModel, setRowModesModel] = useState({});
+  const [rows, setRows] = React.useState([]);
+  const [rowModesModel, setRowModesModel] = React.useState({});
+
+  const handleRowModesModelChange = (newRowModesModel) => {
+            setRowModesModel(newRowModesModel);
+  };
 
   const getActions = ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -63,7 +63,7 @@ export default function FullFeaturedCrudGrid() {
                     icon={<CancelIcon />}
                     label="Cancel"
                     className="textPrimary"
-                    onClick={() => handleCancelClick(id)}
+                    onClick={handleCancelClick(id)}
                     color="inherit"
                 />,
             ]
@@ -72,22 +72,19 @@ export default function FullFeaturedCrudGrid() {
                     icon={<EditIcon />}
                     label="Edit"
                     className="textPrimary"
-                    onClick={() => handleEditClick(id)}
+                    onClick={handleEditClick(id)}
                     color="inherit"
                 />,
                 <GridActionsCellItem
                     icon={<DeleteIcon />}
                     label="Delete"
-                    onClick={() => processRowUpdate(id)}
+                    onClick={handleDeleteClick(id)}
                     color="inherit"
                 />,
             ];
     };
 
     const columns = [
-        { field: 'name', headerName: 'Task Name', width: 180, editable: true },
-        { field: 'priority', headerName: 'Priority', width: 80, editable: true },
-        { field: 'employeeName', headerName: 'Employee Name', width: 180, editable: true },
         {
             field: 'actions',
             type: 'actions',
@@ -96,12 +93,18 @@ export default function FullFeaturedCrudGrid() {
             cellClassName: 'actions',
             getActions: getActions,
         },
+        { field: 'name', headerName: 'Task Name', width: 180, editable: true },
+        { field: 'description', headerName: 'Description', width: 180, editable: true },
+        { field: 'priority', headerName: 'Priority', width: 180, type: 'singleSelect',
+        valueOptions: ['Low', 'Medium', 'High'],editable: true },
+        { field: 'daysRemaining', headerName: 'No. of Days remaining', width: 180, editable: true },
     ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/api/rows');
+        const response = await axios.get('http://localhost:5001/api/v1/tasks');
+        console.log(response.data)
         setRows(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -117,15 +120,6 @@ export default function FullFeaturedCrudGrid() {
     }
   };
 
-  const handleEditClick = (id) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
-
-  const handleSaveClick = (id) => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
-
-
   const handleCancelClick = (id) => () => {
     setRowModesModel({
       ...rowModesModel,
@@ -136,29 +130,62 @@ export default function FullFeaturedCrudGrid() {
     if (editedRow.isNew) {
       setRows(rows.filter((row) => row.id !== id));
     }
+
+    
   };
 
-  const processRowUpdate = async (updatedRow, originalRow) => {
-  if (updatedRow._action === 'delete') {
-    // Handle row deletion
-    try {
-      await axios.delete(`/api/rows/${updatedRow.id}`); // Send delete request
-      return { ...updatedRow, _action: 'delete' }; // Mark the row for deletion
-    } catch (error) {
-      console.error('Error deleting row:', error);
-      return originalRow; // Revert to the original row if deletion fails
-    }
-  }
+  const handleEditClick = (id) => () => {
+    
+    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+  };
 
-  // Handle row update
-  try {
-    const response = await axios.put(`/api/rows/${updatedRow.id}`, updatedRow); // Send update request
-    return response.data; // Return updated row data
-  } catch (error) {
-    console.error('Error updating row:', error);
-    return originalRow; // Revert to the original row if update fails
-  }
-};
+  const handleSaveClick = async (id) => {
+    const row = rows.find((row) => row.id === id);
+    const newOrUpdatedTask = row.isNew;
+    const updatedRow = await processRowUpdate(row);
+    setRows((prevRows) => {
+    return prevRows.map((r) => (r.id === updatedRow.id ? updatedRow : r));
+  });
+
+    setRowModesModel((prevModel) => ({
+        ...prevModel,
+        [updatedRow.id]: { mode: GridRowModes.View },
+    }));
+    
+  };
+
+
+  const handleDeleteClick = (id) => async () => {
+    try {
+        console.log("triggers delete 1");
+        await axios.delete(`http://localhost:5001/api/v1/tasks/${id}`);
+        setRows(rows.filter((row) => row.id !== id));
+      } catch (error) {
+        console.error('Error deleting row:', error);
+      }
+  };
+
+  const processRowUpdate = async (updatedRow) => {
+    try {
+      if (updatedRow.isNew) {
+        const rowToSend = { ...updatedRow, daysRemaining: parseInt(updatedRow.daysRemaining, 10), isNew: false };
+        const response = await axios.post('http://localhost:5001/api/v1/tasks', rowToSend);
+        setRows([...rows.filter((row) => row.id !== updatedRow.id), updatedRow]);
+        setRowModesModel({ ...rowModesModel, [updatedRow.id]: { mode: GridRowModes.View } });
+
+        return response.data;
+      } else {
+        const response = await axios.put(`http://localhost:5001/api/v1/tasks/${updatedRow.id}`, updatedRow);
+        setRows([...rows.filter((row) => row.id !== updatedRow.id), updatedRow]);
+        setRowModesModel({ ...rowModesModel, [updatedRow.id]: { mode: GridRowModes.View } });
+        return response.data;
+      }
+      
+    } catch (error) {
+      console.error('Error updating row:', error);
+      return updatedRow;
+    }
+  };
 
   const handleProcessRowUpdateError = (error) => {
     console.error('Error processing row update:', error);
@@ -182,7 +209,7 @@ export default function FullFeaturedCrudGrid() {
         columns={columns}
         editMode="row"
         rowModesModel={rowModesModel}
-        onRowModesModelChange={setRowModesModel}
+        onRowModesModelChange={handleRowModesModelChange}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleProcessRowUpdateError}
