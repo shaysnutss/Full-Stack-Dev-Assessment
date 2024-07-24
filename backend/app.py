@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import mysql.connector 
+from sqlalchemy.exc import StatementError
 
 app = Flask(__name__)
 
@@ -42,37 +44,62 @@ def get_tasks():
 def add_task():
     try:
         data = request.get_json()
+        
         # Ensure priority is a valid value or provide a default
-        priority = data.get('priority', 'Low')  # Default to 'low' if not provided
+        priority = data.get('priority', 'Low')  # Default to 'Low' if not provided
         
         # Validate priority value
         if priority not in ['Low', 'Medium', 'High']:
             return jsonify({'error': 'Invalid priority value'}), 400
+
+        # Create the new task
         new_task = Task(
-            id = data['id'],
+            id=data['id'],
             name=data['name'],
             description=data.get('description'),
             priority=priority,
             daysRemaining=data['daysRemaining'],
-            isNew=data.get('isNew', True)  
+            isNew=data.get('isNew', True)
         )
+
         db.session.add(new_task)
         db.session.commit()
+
         return jsonify(new_task.to_dict()), 201
+    except (TypeError, ValueError, mysql.connector.DataError) as e:
+        return jsonify({'error': f'Invalid data type: {str(e)}'}), 400
+    except (mysql.connector.InterfaceError, mysql.connector.OperationalError) as e:
+        return jsonify({'error': f'Database connection error: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
-    data = request.get_json()
-    task = Task.query.get_or_404(task_id)
-    task.name = data['name']
-    task.description = data.get('description')
-    task.priority = data['priority']
-    task.daysRemaining = data['daysRemaining']
-    task.isNew = data.get('isNew', task.isNew)  
-    db.session.commit()
-    return jsonify(task.to_dict())
+    try:
+        data = request.get_json()
+        # returns a 404 error request if task_id is not found in the database
+        task = Task.query.get_or_404(task_id)
+        
+        # Update task fields
+        task.name = data['name']
+        task.description = data.get('description')
+        task.priority = data['priority']
+        task.daysRemaining = data['daysRemaining']
+        task.isNew = data.get('isNew', task.isNew)  
+
+        db.session.commit()
+        return jsonify(task.to_dict())
+    except (TypeError, ValueError, StatementError) as e:
+        return jsonify({'error': f'Invalid data type: {str(e)}'}), 400
+    except mysql.connector.errors.DatabaseError as e:
+        if "Incorrect integer value" in str(e):
+            return jsonify({'error': f'Invalid data type: {str(e)}'}), 400
+        else:
+            return jsonify({'error': str(e)}), 500
+    except (mysql.connector.InterfaceError, mysql.connector.OperationalError) as e:
+        return jsonify({'error': f'Database connection error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):

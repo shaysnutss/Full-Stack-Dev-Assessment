@@ -7,3 +7,5 @@ SQLAlchemy==2.0.23
 urllib3==2.2.1
 Werkzeug==3.0.1
 Flask-Cors==4.0.0
+mysql-connector-python
+
