@@ -1,7 +1,7 @@
 # Simple CRUD TO-DO List Application
 
 ## Overview
-This Simple CRUD TO-DO list application is designed to help you manage tasks efficiently. The application features a robust backend developed with Python and Flask, a dynamic frontend created using ReactJS, and a MySQL database for data persistence.
+This Simple CRUD TO-DO list application is designed to help you manage tasks efficiently. The application features a  backend developed with Python and Flask, a  frontend created using ReactJS, and a MySQL database for data persistence.
 
 ## Getting Started
 
@@ -35,7 +35,22 @@ To set up and run this application, you will need the following tools:
 5. **View Application**:
    - Navigate to `http://localhost:3000` in your web browser to view and interact with the application.
 
+6. Exiting application
+  -You can press control + c
+  - You can execute
+    ```sh
+     docker compose down
+     ```
+ - I would suggest executing the following command to free up memory in your laptop
+   ```sh
+     docker compose prune 
+     ```
+   and ```sh
+     docker rmi $(docker images -q)
+     ```
 ## API Documentation
 
 - You can visit this [link](https://sneaky-bagpipe-ea1.notion.site/Accenture-API-Documentation-83517bdaa07f4c6297dc6fe8266d9fdb) to view details on the API documentation.
 - I have managed to integrate Swagger and Flask-RESTPlus for automatic API documentation. As I am having errors with that and the frontend, so, I have not attached it.
+
+Have fun!
