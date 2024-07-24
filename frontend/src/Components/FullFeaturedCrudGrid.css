@@ -1,0 +1,14 @@
+.boxStyle {
+    height: 500px;
+    width: 50%;
+    margin: 0 auto;
+}
+
+
+.boxStyle .innerTable .MuiDataGrid-root {
+    --DataGrid-pinnedBackground: #c8c8c8 !important;
+}
+
+.boxStyle .innerTable{
+    border: 0
+}

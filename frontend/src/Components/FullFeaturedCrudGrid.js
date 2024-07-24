@@ -7,6 +7,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
+import Checkbox from '@mui/material/Checkbox';
+
+import './FullFeaturedCrudGrid.css';
+
+
 import {
     GridRowModes,
     DataGrid,
@@ -43,7 +48,16 @@ function EditToolbar(props) {
 export default function FullFeaturedCrudGrid() {
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
+  const [checked, setChecked] = React.useState({});
+  
+  const handleChange = (id) => (event) => {
+    setChecked((prev) => ({ ...prev, [id]: event.target.checked }));
+        // Call handleDeleteClick here if needed
+        handleDeleteClick(id)();
+    };
 
+
+  
   const handleRowModesModelChange = (newRowModesModel) => {
             setRowModesModel(newRowModesModel);
   };
@@ -76,13 +90,20 @@ export default function FullFeaturedCrudGrid() {
                     color="inherit"
                 />,
                 <GridActionsCellItem
-                    icon={<DeleteIcon />}
+                    icon={
+                        <Checkbox
+                        checked={checked[id] || false}
+                        onChange={handleChange(id)}
+                        inputProps={{ 'aria-label': 'controlled' }}
+                        />
+                    }
                     label="Delete"
-                    onClick={handleDeleteClick(id)}
+                    onClick={handleChange(id)}
                     color="inherit"
-                />,
+                />
             ];
     };
+
 
     const columns = [
         {
@@ -116,6 +137,7 @@ export default function FullFeaturedCrudGrid() {
 
   const handleRowEditStop = (params, event) => {
     if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+      //yes
       event.defaultMuiPrevented = true;
     }
   };
@@ -192,19 +214,10 @@ export default function FullFeaturedCrudGrid() {
   };
 
   return (
-    <Box
-      sx={{
-        height: 500,
-        width: '100%',
-        '& .actions': {
-          color: 'text.secondary',
-        },
-        '& .textPrimary': {
-          color: 'text.primary',
-        },
-      }}
-    >
-      <DataGrid
+    <Box className="boxStyle">
+        <DataGrid
+        sx={{}}
+        className="innerTable"
         rows={rows}
         columns={columns}
         editMode="row"
@@ -214,12 +227,12 @@ export default function FullFeaturedCrudGrid() {
         processRowUpdate={processRowUpdate}
         onProcessRowUpdateError={handleProcessRowUpdateError}
         slots={{
-          toolbar: EditToolbar,
+        toolbar: EditToolbar,
         }}
         slotProps={{
-          toolbar: { setRows, setRowModesModel },
+        toolbar: { setRows, setRowModesModel },
         }}
-      />
+        />
     </Box>
   );
 }

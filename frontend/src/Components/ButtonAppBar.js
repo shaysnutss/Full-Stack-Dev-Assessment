@@ -7,17 +7,22 @@ import IconButton from '@mui/material/IconButton';
 import FormatListNumberedRtlIcon from '@mui/icons-material/FormatListNumberedRtl';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+
 const theme = createTheme({
   typography: {
     fontFamily: 'Roboto, Arial, sans-serif', // Ensure to use the correct font
   },
+  palette: {
+    mode: 'dark',
+  },
 });
+
 
 export default function ButtonAppBar() {
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none' }}>
+      <Box>
+        <AppBar position="static" sx={{ height: '0%' }}>
           <Toolbar>
             <IconButton
               size="large"
@@ -28,7 +33,7 @@ export default function ButtonAppBar() {
             >
               <FormatListNumberedRtlIcon />
             </IconButton>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 0, color: 'black' }}>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 0, color: 'white' }}>
               To-do Application
             </Typography>
           </Toolbar>
