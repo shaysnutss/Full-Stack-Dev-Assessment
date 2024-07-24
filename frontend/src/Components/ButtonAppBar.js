@@ -10,7 +10,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const theme = createTheme({
   typography: {
-    fontFamily: 'Roboto, Arial, sans-serif', // Ensure to use the correct font
+    //fontFamily: 'Roboto, Arial, sans-serif', // Ensure to use the correct font
   },
   palette: {
     mode: 'dark',
